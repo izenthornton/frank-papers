@@ -6,10 +6,10 @@ FRANK Papers Experiment Runner
 Drop this file + the frank_comparison codebase on a cloud GPU and run.
 
 Phases (can run in parallel on separate GPUs):
-  Phase 1: Train 7 models × 10 seeds on ALL tasks (chain, copy, recall, sum)
-  Phase 2: Extreme chain generalization (up to 100,000×)
+  Phase 1: Train 7 models x 10 seeds on ALL tasks (chain, copy, recall, sum)
+  Phase 2: Extreme chain generalization (up to 100,000x)
   Phase 3: Lesion study on ALL tasks (global + targeted)
-  Phase 4: Standard multi-seed generalization (2×–10×) on ALL tasks
+  Phase 4: Standard multi-seed generalization (2x-10x) on ALL tasks
 
 Usage:
   python paper_experiments.py --phase 1 --quick                    # smoke test
@@ -41,7 +41,7 @@ from torch.optim import AdamW
 from torch.optim.lr_scheduler import CosineAnnealingLR, LambdaLR
 from torch.utils.data import DataLoader
 
-# ─── Add project to path ─────────────────────────────────────────────────────
+# --- Add project to path -----------------------------------------------------
 PROJECT_ROOT = Path(__file__).parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
@@ -59,7 +59,7 @@ from frank.tasks.delayed_recall import DelayedRecallTask
 from frank.tasks.running_sum import RunningSumTask
 from frank.tasks.base import TaskConfig, TaskDataset
 
-# ─── Constants ────────────────────────────────────────────────────────────────
+# --- Constants ----------------------------------------------------------------
 ALL_SEEDS = [42, 123, 456, 789, 1337, 2024, 3141, 4242, 5555, 6789]
 ALL_MODELS = ['transformer', 'gru', 'modular', 'modular_memory', 'rims', 'frank', 'frank_no_laterals']
 ALL_TASKS = ['chain', 'copy', 'recall', 'sum']
@@ -67,7 +67,7 @@ EXTREME_SCALES = [10, 100, 1000, 10000, 30000, 100000]
 STANDARD_SCALES = [2, 3, 5, 10]
 DAMAGE_LEVELS = [0, 10, 20, 30, 50]
 TARGETED_DAMAGE_LEVELS = [0, 10, 20, 30, 50, 70]
-TRAIN_MAX_LEN = 20  # trained on lengths 5–20
+TRAIN_MAX_LEN = 20  # trained on lengths 5-20
 
 
 def create_task_by_name(name: str, config: TaskConfig = None):
@@ -89,7 +89,7 @@ RESULTS_DIR = PROJECT_ROOT / 'paper1_results'
 CHECKPOINTS_DIR = PROJECT_ROOT / 'paper1_checkpoints'
 EXTREME_DIR = RESULTS_DIR / 'extreme'
 
-# ─── Global interrupt flag ────────────────────────────────────────────────────
+# --- Global interrupt flag ----------------------------------------------------
 _interrupted = False
 
 def _signal_handler(sig, frame):
@@ -98,14 +98,14 @@ def _signal_handler(sig, frame):
         print("\n*** Force quit ***")
         sys.exit(1)
     _interrupted = True
-    print("\n*** Graceful shutdown requested — finishing current work... ***")
+    print("\n*** Graceful shutdown requested - finishing current work... ***")
 
 signal.signal(signal.SIGINT, _signal_handler)
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
+# ===============================================================================
 # PROGRESS TRACKING & ATOMIC I/O
-# ═══════════════════════════════════════════════════════════════════════════════
+# ===============================================================================
 
 def save_json_atomic(data, path):
     """Write JSON atomically (write-to-temp-then-rename)."""
@@ -152,9 +152,9 @@ class ProgressTracker:
         save_json_atomic(self.data, self.path)
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
+# ===============================================================================
 # NEW MODEL IMPLEMENTATIONS
-# ═══════════════════════════════════════════════════════════════════════════════
+# ===============================================================================
 
 class ModularMemoryModel(nn.Module):
     """Modular Recurrent + Active Memory (no reflex/anomaly/inhibition).
@@ -449,9 +449,9 @@ class _IdentityLateral(nn.Module):
         return module_states
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
+# ===============================================================================
 # MODEL FACTORY
-# ═══════════════════════════════════════════════════════════════════════════════
+# ===============================================================================
 
 def create_model(name: str, input_dim: int = 10, output_dim: int = 10,
                  max_seq_len: int = 200) -> nn.Module:
@@ -475,9 +475,9 @@ def create_model(name: str, input_dim: int = 10, output_dim: int = 10,
         raise ValueError(f"Unknown model: {name}")
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
+# ===============================================================================
 # TRAINING INFRASTRUCTURE
-# ═══════════════════════════════════════════════════════════════════════════════
+# ===============================================================================
 
 def train_model(model_name: str, seed: int, device: str, task_name: str = 'chain',
                 quick: bool = False):
@@ -748,9 +748,9 @@ def evaluate_on_dataloader(model, dataloader, device):
     return metrics
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
+# ===============================================================================
 # EXTREME LENGTH EVALUATION (STREAMING)
-# ═══════════════════════════════════════════════════════════════════════════════
+# ===============================================================================
 
 def eval_chunk_gru(model, input_chunk, hidden, device):
     """Forward a chunk of tokens through GRU. Returns (logits, hidden).
@@ -792,7 +792,7 @@ def eval_chunk_frank(model, input_chunk, device):
 
         reflex_out = frank.reflex(x_t)
         output = inhibit * brain_out + (1 - inhibit) * reflex_out
-        outputs.append(output[0])  # (vocab,) — squeeze batch dim
+        outputs.append(output[0])  # (vocab,) - squeeze batch dim
 
     return torch.stack(outputs, dim=0)  # (chunk_len, vocab)
 
@@ -907,7 +907,7 @@ def eval_extreme_chain(model, model_name, seq_len, seed, n_sequences=50, device=
 
         seq_key = str(seq_idx)
         if seq_key in seq_results:
-            # Already done — accumulate
+            # Already done - accumulate
             total_correct += seq_results[seq_key]['correct']
             total_tokens += seq_results[seq_key]['total']
             continue
@@ -1006,13 +1006,13 @@ def eval_extreme_chain(model, model_name, seq_len, seed, n_sequences=50, device=
     return overall_acc
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
+# ===============================================================================
 # STANDARD GENERALIZATION EVALUATION
-# ═══════════════════════════════════════════════════════════════════════════════
+# ===============================================================================
 
 def eval_standard_generalization(model, model_name, scale, seed, device,
                                   task_name='chain', quick=False):
-    """Evaluate on sequences at scale× training length for any task."""
+    """Evaluate on sequences at scalex training length for any task."""
     min_len = TRAIN_MAX_LEN * scale - (TRAIN_MAX_LEN - 5)  # rough
     max_len = TRAIN_MAX_LEN * scale
     n_samples = 200 if quick else 5000
@@ -1031,9 +1031,9 @@ def eval_standard_generalization(model, model_name, scale, seed, device,
     return metrics
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
+# ===============================================================================
 # PHASE RUNNERS
-# ═══════════════════════════════════════════════════════════════════════════════
+# ===============================================================================
 
 def run_phase1(args):
     """Phase 1: Train all models on ALL tasks with 10 seeds."""
@@ -1046,7 +1046,7 @@ def run_phase1(args):
     tasks = ALL_TASKS
 
     print(f"\n{'#'*60}")
-    print(f"# PHASE 1: Training {len(models)} models × {len(tasks)} tasks × {len(seeds)} seeds")
+    print(f"# PHASE 1: Training {len(models)} models x {len(tasks)} tasks x {len(seeds)} seeds")
     print(f"# Tasks: {tasks}")
     print(f"# Device: {device}")
     print(f"{'#'*60}")
@@ -1062,7 +1062,7 @@ def run_phase1(args):
 
                 key = f"{task_name}_{model_name}_seed{seed}"
                 if progress.is_done('phase1', key):
-                    print(f"\n  [SKIP] {key} — already completed")
+                    print(f"\n  [SKIP] {key} - already completed")
                     continue
 
                 progress.mark_in_progress('phase1', key)
@@ -1109,7 +1109,7 @@ def run_phase2(args):
             # Load checkpoint
             ckpt_path = CHECKPOINTS_DIR / f"best_{model_name}_seed{seed}_chain.pt"
             if not ckpt_path.exists():
-                print(f"\n  [SKIP] {model_name} seed={seed} — no checkpoint")
+                print(f"\n  [SKIP] {model_name} seed={seed} - no checkpoint")
                 continue
 
             model = create_model(model_name, 10, 10)
@@ -1124,11 +1124,11 @@ def run_phase2(args):
 
                 key = f"{model_name}_seed{seed}_{scale}x"
                 if progress.is_done('phase2', key):
-                    print(f"\n  [SKIP] {key} — already completed")
+                    print(f"\n  [SKIP] {key} - already completed")
                     continue
 
                 seq_len = TRAIN_MAX_LEN * scale
-                print(f"\n  Evaluating {model_name} seed={seed} at {scale}× ({seq_len:,} tokens)...")
+                print(f"\n  Evaluating {model_name} seed={seed} at {scale}x ({seq_len:,} tokens)...")
 
                 acc = eval_extreme_chain(
                     model, model_name, seq_len, seed,
@@ -1177,7 +1177,7 @@ def run_phase3(args):
         dataloaders = task.get_dataloaders(seed=42)
         test_loader = dataloaders['test']
 
-        # === Global Lesion (all models × all seeds) ===
+        # === Global Lesion (all models x all seeds) ===
         global_file = RESULTS_DIR / f'phase3_global_lesion_{task_name}.json'
         global_results = load_json_safe(global_file)
 
@@ -1191,12 +1191,12 @@ def run_phase3(args):
 
                 key = f"global_{task_name}_{model_name}_seed{seed}"
                 if progress.is_done('phase3', key):
-                    print(f"\n  [SKIP] Global lesion {task_name}/{model_name} seed={seed} — already completed")
+                    print(f"\n  [SKIP] Global lesion {task_name}/{model_name} seed={seed} - already completed")
                     continue
 
                 ckpt_path = CHECKPOINTS_DIR / f"best_{model_name}_seed{seed}_{task_name}.pt"
                 if not ckpt_path.exists():
-                    print(f"\n  [SKIP] {model_name} seed={seed} {task_name} — no checkpoint")
+                    print(f"\n  [SKIP] {model_name} seed={seed} {task_name} - no checkpoint")
                     continue
 
                 model = create_model(model_name, task.input_vocab_size,
@@ -1228,7 +1228,7 @@ def run_phase3(args):
                 save_json_atomic(global_results, global_file)
                 progress.mark_done('phase3', key)
 
-        # === Targeted Lesion (Frank × all seeds, per task) ===
+        # === Targeted Lesion (Frank x all seeds, per task) ===
         targeted_file = RESULTS_DIR / f'phase3_targeted_lesion_{task_name}.json'
         targeted_results = load_json_safe(targeted_file)
 
@@ -1238,12 +1238,12 @@ def run_phase3(args):
 
             key = f"targeted_{task_name}_frank_seed{seed}"
             if progress.is_done('phase3', key):
-                print(f"\n  [SKIP] Targeted lesion {task_name}/Frank seed={seed} — already completed")
+                print(f"\n  [SKIP] Targeted lesion {task_name}/Frank seed={seed} - already completed")
                 continue
 
             ckpt_path = CHECKPOINTS_DIR / f"best_frank_seed{seed}_{task_name}.pt"
             if not ckpt_path.exists():
-                print(f"\n  [SKIP] Frank seed={seed} {task_name} — no checkpoint")
+                print(f"\n  [SKIP] Frank seed={seed} {task_name} - no checkpoint")
                 continue
 
             model = create_model('frank', task.input_vocab_size,
@@ -1279,7 +1279,7 @@ def run_phase3(args):
 
 
 def run_phase4(args):
-    """Phase 4: Standard multi-seed generalization (2×–10×) on ALL tasks."""
+    """Phase 4: Standard multi-seed generalization (2x-10x) on ALL tasks."""
     global _interrupted
     progress = ProgressTracker()
     device = f'cuda:{args.gpu}' if torch.cuda.is_available() else 'cpu'
@@ -1290,7 +1290,7 @@ def run_phase4(args):
     scales = STANDARD_SCALES
 
     print(f"\n{'#'*60}")
-    print(f"# PHASE 4: Standard Generalization (2×–10×) on all tasks")
+    print(f"# PHASE 4: Standard Generalization (2x-10x) on all tasks")
     print(f"# Tasks: {tasks}")
     print(f"{'#'*60}")
 
@@ -1350,14 +1350,14 @@ def run_phase4(args):
                     save_json_atomic(results, results_file)
                     progress.mark_done('phase4', key)
 
-                    print(f"  {task_name}/{model_name} seed={seed} {scale}×: {metrics['token_accuracy']:.4f}")
+                    print(f"  {task_name}/{model_name} seed={seed} {scale}x: {metrics['token_accuracy']:.4f}")
 
         # Print summary table per task
         if not _interrupted:
             print(f"\n{'='*80}")
             print(f"STANDARD GENERALIZATION SUMMARY: {task_name.upper()} (mean across seeds)")
             print(f"{'='*80}")
-            header = f"{'Model':20s}" + "".join(f"  {s}×" for s in scales)
+            header = f"{'Model':20s}" + "".join(f"  {s}x" for s in scales)
             print(header)
             print("-" * len(header))
 
@@ -1377,9 +1377,9 @@ def run_phase4(args):
                 print(row)
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
+# ===============================================================================
 # MAIN
-# ═══════════════════════════════════════════════════════════════════════════════
+# ===============================================================================
 
 def main():
     parser = argparse.ArgumentParser(description="FRANK Papers Experiment Runner")
@@ -1416,7 +1416,7 @@ def main():
     if torch.cuda.is_available():
         print(f"  CUDA device: {torch.cuda.get_device_name(args.gpu)}")
     else:
-        print(f"  WARNING: No CUDA — running on CPU (this will be very slow)")
+        print(f"  WARNING: No CUDA - running on CPU (this will be very slow)")
 
     phases = ['1', '2', '3', '4'] if args.phase == 'all' else [args.phase]
 

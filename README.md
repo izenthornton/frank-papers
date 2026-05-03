@@ -1,9 +1,9 @@
 # FRANK: Reviewer Package
 
-This repository contains the manuscripts and complete reproducibility code for two companion papers:
+This repository contains the manuscripts and reproducibility code for two companion papers:
 
-- **Paper 1** — *FRANK: A Brain-Inspired Modular Architecture for Extreme Length Generalization* — [`papers/Paper1_FRANK_Architecture.pdf`](papers/Paper1_FRANK_Architecture.pdf)
-- **Paper 2** — *Emergent Specialization in Modular Recurrent Networks: Lesion Analysis of the FRANK Architecture* — [`papers/Paper2_Emergent_Specialization.pdf`](papers/Paper2_Emergent_Specialization.pdf)
+- **Paper 1**: *FRANK: A Brain-Inspired Modular Architecture for Extreme Length Generalization* ([`papers/Paper1_FRANK_Architecture.pdf`](papers/Paper1_FRANK_Architecture.pdf))
+- **Paper 2**: *Emergent Specialization in Modular Recurrent Networks: Lesion Analysis of the FRANK Architecture* ([`papers/Paper2_Emergent_Specialization.pdf`](papers/Paper2_Emergent_Specialization.pdf))
 
 Author: Izen Thornton (Independent Researcher, izen@cixate.com).
 
@@ -12,26 +12,26 @@ Author: Izen Thornton (Independent Researcher, izen@cixate.com).
 ## What's in this package
 
 ```
-.
-├── README.md                       (this file)
-├── LICENSE                         (Research Use License; see below)
-├── requirements.txt                (just torch + numpy)
-├── paper_experiments.py           main experiment runner (produces data for BOTH papers)
-├── papers/
-│   ├── Paper1_FRANK_Architecture.pdf
-│   └── Paper2_Emergent_Specialization.pdf
-├── frank/                          source package
-│   ├── models/                     FRANK + 4 baseline classes (~500K params each)
-│   └── tasks/                      chain, copy, recall, sum
-├── scripts/
-│   └── aggregate_results.py        prints all paper tables from the JSON output
-└── tests/
-    └── test_integration.py         dataset / forward-pass / gradient sanity tests
+frank-papers/
+  README.md                  (this file)
+  LICENSE                    (Research Use License; see below)
+  requirements.txt           (just torch + numpy)
+  paper_experiments.py       main experiment runner
+  papers/
+    Paper1_FRANK_Architecture.pdf
+    Paper2_Emergent_Specialization.pdf
+  frank/                     source package
+    models/                  FRANK + 4 baseline classes (~500K params each)
+    tasks/                   chain, copy, recall, sum
+  scripts/
+    aggregate_results.py     prints all paper tables from JSON output
+  tests/
+    test_integration.py      dataset, forward-pass, gradient sanity tests
 ```
 
-A single script — `paper_experiments.py` — produces the raw data for **every table in both papers**. 
+`paper_experiments.py` produces the raw data for every table in both papers.
 
-The four core baseline classes (`TransformerModel`, `GRUModel`, `ModularRecurrentModel`, `FrankModel`) live in `frank/models/`. The three derived variants used in the papers — Modular+Memory, RIMs, and FRANK-NoLat — are defined inline in `paper_experiments.py`, alongside the training/eval loops, the chunked extreme-length evaluator, and the lesion routines.
+The four core baseline classes (`TransformerModel`, `GRUModel`, `ModularRecurrentModel`, `FrankModel`) live in `frank/models/`. The three derived variants used in the papers (Modular+Memory, RIMs, FRANK-NoLat) are defined inline in `paper_experiments.py`, alongside the training and eval loops, the chunked extreme-length evaluator, and the lesion routines.
 
 ---
 
@@ -39,25 +39,25 @@ The four core baseline classes (`TransformerModel`, `GRUModel`, `ModularRecurren
 
 ```bash
 # 1. Install
-pip install -r requirements.txt           # PyTorch 2.0+, NumPy, etc.
+pip install -r requirements.txt
 
 # 2. Smoke test (~5 minutes on a laptop CPU; verifies the pipeline runs)
 python paper_experiments.py --phase 1 --quick --models gru --seeds 42
 
 # 3. (Optional) confirm the package imports cleanly
-python -m pytest tests/
+python -m unittest tests.test_integration
 
 # 4. Print paper tables from any results JSON you've produced
 python scripts/aggregate_results.py
 ```
 
-The smoke test trains a small GRU on all four tasks for 10 epochs each. The full 10-seed reproduction is much heavier — see *Compute requirements* below.
+The smoke test trains a small GRU on all four tasks for 10 epochs each. The full 10-seed reproduction is much heavier; see *Compute requirements* below.
 
 ---
 
 ## Architecture summary
 
-FRANK has five components, all active every timestep, with **no routing**:
+FRANK has five components, all active every timestep, with no routing:
 
 | Component | Implementation | Brain analogue |
 |---|---|---|
@@ -73,7 +73,7 @@ The recurrence is a tau-damped update without GRU/LSTM gates:
 h_t = (1 - 1/tau) * h_{t-1} + (1/tau) * tanh(W_x x_t + W_h h_{t-1})
 ```
 
-FRANK is the third stage of a development progression (Modular -> Modular+Memory -> FRANK). All seven models are matched at ~500K parameters.
+FRANK is the third stage of a development progression: Modular, then Modular+Memory, then FRANK. All seven models are matched at ~500K parameters.
 
 | Model | Params | Notes |
 |---|---|---|
@@ -89,28 +89,29 @@ FRANK is the third stage of a development progression (Modular -> Modular+Memory
 
 ## Reproducing the paper results
 
-The runner has four phases. Re-running the same command resumes from the last completed unit (atomic JSON writes + `progress.json`).
+The runner has four phases. Re-running the same command resumes from the last completed unit (atomic JSON writes plus `progress.json`).
 
-### Phase 1 — Train every (model, task, seed)
+### Phase 1: train every (model, task, seed)
 ```bash
 python paper_experiments.py --phase 1
 ```
 Produces 7 models x 4 tasks x 10 seeds = 280 checkpoints in `paper1_checkpoints/`. All later phases load from these.
 
-### Phase 2 — Extreme chain generalization (Paper 1, Tables 2 & 3)
+### Phase 2: extreme chain generalization (Paper 1, Tables 2 and 3)
 ```bash
 python paper_experiments.py --phase 2
 ```
 Streams chain sequences up to 100,000x training length (2,000,000 tokens) through FRANK, GRU, and FRANK-NoLat, chunked at 1,000 tokens. Per-sequence results are written incrementally so partial runs are not wasted.
 
-### Phase 3 — Lesion studies (Paper 2, Tables 1, 2, 3, 4)
+### Phase 3: lesion studies (Paper 2, Tables 1, 2, 3, 4)
 ```bash
 python paper_experiments.py --phase 3
 ```
-- **Global lesion**: random weight zeroing across the full network at {0, 10, 20, 30, 50}% damage, 10 patterns per level, every model, every task.
-- **Targeted lesion**: damage applied to a single FRANK component at a time at {0, 10, 20, 30, 50, 70}%, every task.
+Global lesion: random weight zeroing across the full network at {0, 10, 20, 30, 50}% damage, 10 patterns per level, every model, every task.
 
-### Phase 4 — Standard generalization (Paper 1, Table 4)
+Targeted lesion: damage applied to a single FRANK component at a time at {0, 10, 20, 30, 50, 70}%, every task.
+
+### Phase 4: standard generalization (Paper 1, Table 4)
 ```bash
 python paper_experiments.py --phase 4
 ```
@@ -121,7 +122,7 @@ python paper_experiments.py --phase 4
 python paper_experiments.py --phase all
 ```
 
-### Splitting work across GPUs / machines
+### Splitting work across GPUs or machines
 ```bash
 # GPU 0: half the seeds
 python paper_experiments.py --seeds 42,123,456,789,1337 --gpu 0 \
@@ -142,7 +143,7 @@ After phases finish, run:
 python scripts/aggregate_results.py --results-dir paper1_results
 ```
 
-This reads the JSON files Phases 1-4 produce and prints each table from both papers (extreme generalization per-seed, standard generalization mean across seeds, targeted lesion at 10%, global lesion vs. damage, etc.). The script is small and easy to inspect.
+This reads the JSON files Phases 1 through 4 produce and prints each table from both papers: extreme generalization per-seed, standard generalization mean across seeds, targeted lesion at 10%, global lesion vs. damage, and so on.
 
 ---
 
@@ -150,24 +151,24 @@ This reads the JSON files Phases 1-4 produce and prints each table from both pap
 
 Everything in this folder maps directly to results reported in the two PDFs in `papers/`. The four phases of `paper_experiments.py` cover:
 
-- Paper 1: Tables 2, 3, 4 (extreme generalization, scale-wise means, standard 2x-10x).
+- Paper 1: Tables 2, 3, 4 (extreme generalization, scale-wise means, standard 2x to 10x).
 - Paper 2: Tables 1, 2, 3, 4 (targeted-component lesion, degradation curves, specialization map, global lesion).
 
-**Known omission — RAM-FRANK (Paper 1, Section 6).** The RAM-FRANK negative result (a FRANK variant with 16 memory slots and per-slot learnable write-gate biases initialized 0.0 -> 2.0) is not bundled here. It lives on a separate ablation branch and is available on request — please email izen@cixate.com. RAM-FRANK is a negative-result ablation that supports the *minimalism-as-regularization* discussion; it is not load-bearing for any of the headline numbers in either paper.
+**Known omission: RAM-FRANK (Paper 1, Section 6).** The RAM-FRANK negative result (a FRANK variant with 16 memory slots and per-slot learnable write-gate biases initialized 0.0 to 2.0) is not bundled here. It lives on a separate ablation branch and is available on request; please email izen@cixate.com. RAM-FRANK is a negative-result ablation that supports the *minimalism-as-regularization* discussion. None of the headline numbers in either paper depend on it.
 
-If you would like to re-implement RAM-FRANK from the paper description, the only delta from FRANK is in the Active Memory: replace the single 64-slot memory in [`frank/models/frank.py`](frank/models/frank.py) with 16 slots, each carrying a learnable scalar write-gate bias initialized linearly across `[0.0, 2.0]`, and feed the slot's softmax-attended value through a sigmoid of that gate before injection into module 0.
+If you want to re-implement RAM-FRANK from the paper description, the only delta from FRANK is in the Active Memory: replace the single 64-slot memory in [`frank/models/frank.py`](frank/models/frank.py) with 16 slots, each carrying a learnable scalar write-gate bias initialized linearly across `[0.0, 2.0]`, and feed the slot's softmax-attended value through a sigmoid of that gate before injection into module 0.
 
 ---
 
 ## Compute requirements
 
-- Phase 1: ~2-4 GPU-hours per (model, task, seed) on an RTX 3080 (~24 hours total per seed).
-- Phase 2: dominated by the 100,000x sequences (~2M tokens each). ~30-60 min per FRANK seed at the largest scale.
-- Phases 3-4: minutes per (model, seed) given existing checkpoints.
+- Phase 1: ~2 to 4 GPU-hours per (model, task, seed) on an RTX 3080 (~24 hours total per seed).
+- Phase 2: dominated by the 100,000x sequences (~2M tokens each). ~30 to 60 min per FRANK seed at the largest scale.
+- Phases 3 and 4: minutes per (model, seed) given existing checkpoints.
 
-**Published results**: 10 seeds x ~24 hours = ~10 GPU-days, run in parallel on 10x RTX 3080s.
+Published results: 10 seeds x ~24 hours = ~10 GPU-days, run in parallel on 10x RTX 3080s.
 
-If you only want to verify the architecture and one or two seeds run end-to-end, the `--quick` flag and `--seeds 42` will produce the full pipeline output in well under an hour.
+If you only want to verify the architecture and one or two seeds run end-to-end, the `--quick` flag with `--seeds 42` will produce the full pipeline output in well under an hour.
 
 ---
 
@@ -175,13 +176,13 @@ If you only want to verify the architecture and one or two seeds run end-to-end,
 
 The 10 seeds used in the papers are fixed: `[42, 123, 456, 789, 1337, 2024, 3141, 4242, 5555, 6789]`.
 
-`torch.manual_seed(seed)` and `np.random.seed(seed)` are set per training run; per-sequence eval seeds in Phase 2 derive from `seed * 10000 + sequence_index` for full reproducibility of the extreme-length evaluation. No CUDA-deterministic algorithm flag is set, so single-token differences across hardware are possible but the trimodal distribution reported in Paper 1 (perfect / partial / chance) is robust across all hardware we tested.
+`torch.manual_seed(seed)` and `np.random.seed(seed)` are set per training run. Per-sequence eval seeds in Phase 2 derive from `seed * 10000 + sequence_index` for full reproducibility of the extreme-length evaluation. No CUDA-deterministic algorithm flag is set, so single-token differences across hardware are possible. The trimodal distribution reported in Paper 1 (perfect, partial, chance) is robust across all hardware tested.
 
 ---
 
 ## Key headline results (for fast cross-checking)
 
-### Paper 1 — Chain task at 100,000x training length (per-seed token accuracy)
+### Paper 1: chain task at 100,000x training length (per-seed token accuracy)
 
 | Seed | FRANK | GRU | FRANK-NoLat |
 |---|---|---|---|
@@ -197,7 +198,7 @@ The 10 seeds used in the papers are fixed: `[42, 123, 456, 789, 1337, 2024, 3141
 | 6789 | 10.0% | 67.9% | 18.2% |
 | **Mean** | **63.0%** | 32.8% | 44.9% |
 
-### Paper 2 — FRANK accuracy at 10% targeted component damage (seed 42)
+### Paper 2: FRANK accuracy at 10% targeted component damage (seed 42)
 
 | Component | Chain | Copy | Recall | Sum |
 |---|---|---|---|---|
