@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+
+# Model checkpoints
+checkpoints/
+paper1_results/
+paper1_checkpoints/
+*.pt
+*.pth
+
+# Generated outputs
+results/
+logs/
+*.log
+
+# Development artifacts
+attached_assets/
+replit.md
+VASTAI_INSTRUCTIONS.md
+param_count_script.py
+test_10k.py
+test_chain_100k.py
+main.py
+
+# System
+.DS_Store
+*.swp
+*.swo
+*~
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.code-workspace
+
+# Environment
+venv/
+env/
+.env

@@ -1,0 +1,37 @@
+Copyright 2026 Izen Thornton. All rights reserved.
+
+RESEARCH USE LICENSE
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to use
+the Software solely for academic research, education, and reproduction of the
+results described in the associated publications:
+
+  1. "FRANK: A Brain-Inspired Modular Architecture for Extreme Length
+     Generalization" (Thornton, 2026)
+  2. "Emergent Specialization in Modular Recurrent Networks: Lesion Analysis
+     of the FRANK Architecture" (Thornton, 2026)
+
+The following restrictions apply:
+
+  - Commercial use of the Software, or any derivative work, is prohibited
+    without prior written permission from the copyright holder.
+  - The Software may not be used to develop, train, or deploy commercial
+    products or services without a separate commercial license.
+  - Redistribution of the Software, with or without modification, must retain
+    this license notice and the above copyright notice.
+  - Any academic publication that uses this Software must cite the associated
+    publications listed above.
+
+PATENT NOTICE: The FRANK architecture described in this Software is the subject
+of a pending patent application. This license does not grant any rights under
+any patents held or pending by the copyright holder.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+For commercial licensing inquiries, contact: izen@cixate.com
