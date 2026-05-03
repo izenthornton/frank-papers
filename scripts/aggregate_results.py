@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Aggregate the JSON output of paper1_experiments.py into the tables that
+Aggregate the JSON output of paper_experiments.py into the tables that
 appear in Paper 1 and Paper 2.
 
 Usage:
@@ -339,13 +339,13 @@ def table_phase1_sanity(phase1, out):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Aggregate paper1_experiments.py output into Paper 1/2 tables."
+        description="Aggregate paper_experiments.py output into Paper 1/2 tables."
     )
     parser.add_argument(
         "--results-dir",
         type=Path,
         default=Path("paper1_results"),
-        help="Directory containing the JSON output of paper1_experiments.py",
+        help="Directory containing the JSON output of paper_experiments.py",
     )
     parser.add_argument(
         "--output",
@@ -359,7 +359,7 @@ def main():
     if not rd.exists():
         print(f"Results directory not found: {rd}", file=sys.stderr)
         print(
-            "Run paper1_experiments.py first, or pass --results-dir to point at "
+            "Run paper_experiments.py first, or pass --results-dir to point at "
             "your output.",
             file=sys.stderr,
         )

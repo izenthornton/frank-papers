@@ -1,8 +1,8 @@
 """Integration tests for dataset, forward pass, and gradients.
 
-These tests exercise the building blocks used by paper1_experiments.py.
+These tests exercise the building blocks used by paper_experiments.py.
 The full reproduction pipeline (training, lesion, generalization) lives in
-paper1_experiments.py itself; run `python paper1_experiments.py --quick` for
+paper_experiments.py itself; run `python paper_experiments.py --quick` for
 an end-to-end smoke test.
 """
 import os

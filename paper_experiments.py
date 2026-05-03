@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Paper 1 Experiment Runner: FRANK Architecture & Generalization
+FRANK Papers Experiment Runner
 ==============================================================
 
 Drop this file + the frank_comparison codebase on a cloud GPU and run.
@@ -12,11 +12,11 @@ Phases (can run in parallel on separate GPUs):
   Phase 4: Standard multi-seed generalization (2×–10×) on ALL tasks
 
 Usage:
-  python paper1_experiments.py --phase 1 --quick                    # smoke test
-  python paper1_experiments.py --phase 1 --models frank,gru --gpu 0  # split work
-  python paper1_experiments.py --phase 2 --gpu 0                     # extreme eval
-  python paper1_experiments.py --seeds 42,123,456,789                # all phases, subset of seeds
-  python paper1_experiments.py --phase all                           # everything
+  python paper_experiments.py --phase 1 --quick                    # smoke test
+  python paper_experiments.py --phase 1 --models frank,gru --gpu 0  # split work
+  python paper_experiments.py --phase 2 --gpu 0                     # extreme eval
+  python paper_experiments.py --seeds 42,123,456,789                # all phases, subset of seeds
+  python paper_experiments.py --phase all                           # everything
 
 Resume after crash: just re-run the same command. Completed work is skipped.
 """
@@ -1382,7 +1382,7 @@ def run_phase4(args):
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def main():
-    parser = argparse.ArgumentParser(description="Paper 1 Experiment Runner")
+    parser = argparse.ArgumentParser(description="FRANK Papers Experiment Runner")
     parser.add_argument('--phase', type=str, default='all',
                         help='Phase to run: 1, 2, 3, 4, or all')
     parser.add_argument('--models', type=str, default=None,
@@ -1406,7 +1406,7 @@ def main():
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     CHECKPOINTS_DIR.mkdir(parents=True, exist_ok=True)
 
-    print(f"Paper 1 Experiment Runner")
+    print(f"FRANK Papers Experiment Runner")
     print(f"  Phase: {args.phase}")
     print(f"  GPU: {args.gpu}")
     print(f"  Quick mode: {args.quick}")

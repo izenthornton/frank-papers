@@ -19,7 +19,7 @@ def create_model(
     """Create a model by name.
 
     The 'modular_memory', 'rims', and 'frank_no_laterals' variants used in the
-    papers live in paper1_experiments.py. Use that runner for the full set.
+    papers live in paper_experiments.py. Use that runner for the full set.
 
     Args:
         model_name: One of 'transformer', 'gru', 'modular', 'frank'

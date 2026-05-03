@@ -16,7 +16,7 @@ Author: Izen Thornton (Independent Researcher, izen@cixate.com).
 ├── README.md                       (this file)
 ├── LICENSE                         (Research Use License; see below)
 ├── requirements.txt                (just torch + numpy)
-├── paper1_experiments.py           main experiment runner (produces data for BOTH papers)
+├── paper_experiments.py           main experiment runner (produces data for BOTH papers)
 ├── papers/
 │   ├── Paper1_FRANK_Architecture.pdf
 │   └── Paper2_Emergent_Specialization.pdf
@@ -29,9 +29,9 @@ Author: Izen Thornton (Independent Researcher, izen@cixate.com).
     └── test_integration.py         dataset / forward-pass / gradient sanity tests
 ```
 
-A single script — `paper1_experiments.py` — produces the raw data for **every table in both papers**. Despite the filename, it covers Paper 2's lesion experiments as well; the name is historical.
+A single script — `paper_experiments.py` — produces the raw data for **every table in both papers**. 
 
-The four core baseline classes (`TransformerModel`, `GRUModel`, `ModularRecurrentModel`, `FrankModel`) live in `frank/models/`. The three derived variants used in the papers — Modular+Memory, RIMs, and FRANK-NoLat — are defined inline in `paper1_experiments.py`, alongside the training/eval loops, the chunked extreme-length evaluator, and the lesion routines.
+The four core baseline classes (`TransformerModel`, `GRUModel`, `ModularRecurrentModel`, `FrankModel`) live in `frank/models/`. The three derived variants used in the papers — Modular+Memory, RIMs, and FRANK-NoLat — are defined inline in `paper_experiments.py`, alongside the training/eval loops, the chunked extreme-length evaluator, and the lesion routines.
 
 ---
 
@@ -42,7 +42,7 @@ The four core baseline classes (`TransformerModel`, `GRUModel`, `ModularRecurren
 pip install -r requirements.txt           # PyTorch 2.0+, NumPy, etc.
 
 # 2. Smoke test (~5 minutes on a laptop CPU; verifies the pipeline runs)
-python paper1_experiments.py --phase 1 --quick --models gru --seeds 42
+python paper_experiments.py --phase 1 --quick --models gru --seeds 42
 
 # 3. (Optional) confirm the package imports cleanly
 python -m pytest tests/
@@ -93,42 +93,42 @@ The runner has four phases. Re-running the same command resumes from the last co
 
 ### Phase 1 — Train every (model, task, seed)
 ```bash
-python paper1_experiments.py --phase 1
+python paper_experiments.py --phase 1
 ```
 Produces 7 models x 4 tasks x 10 seeds = 280 checkpoints in `paper1_checkpoints/`. All later phases load from these.
 
 ### Phase 2 — Extreme chain generalization (Paper 1, Tables 2 & 3)
 ```bash
-python paper1_experiments.py --phase 2
+python paper_experiments.py --phase 2
 ```
 Streams chain sequences up to 100,000x training length (2,000,000 tokens) through FRANK, GRU, and FRANK-NoLat, chunked at 1,000 tokens. Per-sequence results are written incrementally so partial runs are not wasted.
 
 ### Phase 3 — Lesion studies (Paper 2, Tables 1, 2, 3, 4)
 ```bash
-python paper1_experiments.py --phase 3
+python paper_experiments.py --phase 3
 ```
 - **Global lesion**: random weight zeroing across the full network at {0, 10, 20, 30, 50}% damage, 10 patterns per level, every model, every task.
 - **Targeted lesion**: damage applied to a single FRANK component at a time at {0, 10, 20, 30, 50, 70}%, every task.
 
 ### Phase 4 — Standard generalization (Paper 1, Table 4)
 ```bash
-python paper1_experiments.py --phase 4
+python paper_experiments.py --phase 4
 ```
 2x, 3x, 5x, 10x training-length evaluation across all models and all tasks.
 
 ### Run everything
 ```bash
-python paper1_experiments.py --phase all
+python paper_experiments.py --phase all
 ```
 
 ### Splitting work across GPUs / machines
 ```bash
 # GPU 0: half the seeds
-python paper1_experiments.py --seeds 42,123,456,789,1337 --gpu 0 \
+python paper_experiments.py --seeds 42,123,456,789,1337 --gpu 0 \
     --results-dir paper1_results/gpu0
 
 # GPU 1: the other half
-python paper1_experiments.py --seeds 2024,3141,4242,5555,6789 --gpu 1 \
+python paper_experiments.py --seeds 2024,3141,4242,5555,6789 --gpu 1 \
     --results-dir paper1_results/gpu1
 ```
 
@@ -148,7 +148,7 @@ This reads the JSON files Phases 1-4 produce and prints each table from both pap
 
 ## Scope and a known omission
 
-Everything in this folder maps directly to results reported in the two PDFs in `papers/`. The four phases of `paper1_experiments.py` cover:
+Everything in this folder maps directly to results reported in the two PDFs in `papers/`. The four phases of `paper_experiments.py` cover:
 
 - Paper 1: Tables 2, 3, 4 (extreme generalization, scale-wise means, standard 2x-10x).
 - Paper 2: Tables 1, 2, 3, 4 (targeted-component lesion, degradation curves, specialization map, global lesion).
